@@ -1,2 +1,2 @@
 # ClickOnMe
-Simple tool to test if a webpage is vulnerable to ClickJacking
+Simple tool to test if a web page is vulnerable to ClickJacking
