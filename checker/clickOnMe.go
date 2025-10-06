@@ -77,16 +77,21 @@ func checkListURL(checkListURL []string) {
 
 	//Determine either the result should be printed on stdout or written in a file
 	writeFD := os.Stdout
-	file, err := os.OpenFile(OutputFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0777)
-	if err == nil {
-		writeFD = file
-	} else {
-		fmt.Printf("[ERROR] The file \"%s\" cannot be opened : %s\n", OutputFile, err)
+
+	if OutputFile != "" {
+		file, err := os.OpenFile(OutputFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0777)
+		if err == nil {
+			writeFD = file
+		} else {
+			fmt.Printf("[ERROR] The file \"%s\" cannot be opened : %s\n", OutputFile, err)
+		}
 	}
+
+	fmt.Print("\nStart checking URL\n\n")
 
 	for _, url := range checkListURL {
 		answer := testURL(url)
-		fmt.Fprintf(writeFD, "|%s\t|\t%s\t|\n", url, answer.toString())
+		fmt.Fprintf(writeFD, "|  %s\t|\t%s\t|\n", url, answer.toString())
 	}
 
 }
@@ -105,6 +110,6 @@ func StartChecking() {
 
 	checkListURL(listURLs)
 
-	fmt.Print("Every URL has been verified !\n")
+	fmt.Print("\nEvery URL has been verified !\n")
 
 }
