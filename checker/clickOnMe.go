@@ -6,13 +6,16 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 var (
-	FileURLs   string
-	RateLimit  int
-	URL        string
-	OutputFile string
+	FileURLs    string
+	RateLimit   int
+	URL         string
+	OutputFile  string
+	ToggleColor bool
 )
 
 type Result int
@@ -35,6 +38,7 @@ const (
 
 func (res Result) toString() string {
 	return resName[res]
+
 }
 
 func fillListFromFile() []string {
@@ -91,7 +95,21 @@ func checkListURL(checkListURL []string) {
 
 	for _, url := range checkListURL {
 		answer := testURL(url)
-		fmt.Fprintf(writeFD, "|  %s\t|\t%s\t|\n", url, answer.toString())
+		res := "|  " + url + "\t|\t" + answer.toString() + "\t|\n"
+		if ToggleColor && writeFD == os.Stdout {
+			switch answer {
+			case OK:
+				color.Red(res)
+			case NOK:
+				color.Green(res)
+			case MAYBE:
+				color.Yellow(res)
+			case ERROR:
+				color.Blue(res)
+			}
+		} else {
+			fmt.Fprintf(writeFD, "%s", res)
+		}
 	}
 
 }
