@@ -9,9 +9,10 @@ import (
 )
 
 var (
-	FileURLs  string
-	RateLimit int
-	URL       string
+	FileURLs   string
+	RateLimit  int
+	URL        string
+	OutputFile string
 )
 
 type Result int
@@ -32,14 +33,14 @@ const (
 	ERROR
 )
 
-func (res Result) String() string {
+func (res Result) toString() string {
 	return resName[res]
 }
 
 func fillListFromFile() []string {
 	file, err := os.Open(FileURLs)
 	if err != nil {
-		fmt.Printf("[ERROR] An error occurred while trying to open the file : %s\nPlease check the name of the file\n\n", FileURLs)
+		fmt.Printf("[ERROR] An error occurred while trying to open the file : %s\nPlease check the name of the file\n", FileURLs)
 		os.Exit(1)
 	}
 	var listURLs []string
@@ -55,11 +56,11 @@ func testURL(url string) Result {
 	resp, err := http.Get(url)
 
 	if err != nil {
-		fmt.Printf("Error while testing \"%s\" : %s\n", url, err)
+		fmt.Printf("[Error] Error while testing \"%s\" : %s\n", url, err)
 		return ERROR
 	}
 
-	// Check X-Frame-Option to see if it accept iframe from web pages of remote origin
+	// Check X-Frame-Option to see if it accepts Iframe from web pages of remote origin
 	xFrameOption := resp.Header["X-Frame-Options"]
 	if xFrameOption != nil && (strings.Contains(xFrameOption[0], "deny") || strings.Contains(xFrameOption[0], "sameorigin")) {
 		return NOK
@@ -73,9 +74,19 @@ func testURL(url string) Result {
 }
 
 func checkListURL(checkListURL []string) {
+
+	//Determine either the result should be printed on stdout or written in a file
+	writeFD := os.Stdout
+	file, err := os.OpenFile(OutputFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0777)
+	if err == nil {
+		writeFD = file
+	} else {
+		fmt.Printf("[ERROR] The file \"%s\" cannot be opened : %s\n", OutputFile, err)
+	}
+
 	for _, url := range checkListURL {
 		answer := testURL(url)
-		fmt.Printf("%s\t|\t%s\t\n", url, answer.String())
+		fmt.Fprintf(writeFD, "|%s\t|\t%s\t|\n", url, answer.toString())
 	}
 
 }
@@ -84,7 +95,7 @@ func StartChecking() {
 	var listURLs []string
 
 	if (FileURLs != "" && URL != "") || (FileURLs == "" && URL == "") {
-		fmt.Printf("You should use \"--file\" or \"--url\" at least, but not both at the same time\n")
+		fmt.Printf("You should use \"--inputFile\" or \"--url\" at least, but not both at the same time\n")
 		os.Exit(1)
 	} else if FileURLs != "" {
 		listURLs = fillListFromFile()
@@ -93,5 +104,7 @@ func StartChecking() {
 	}
 
 	checkListURL(listURLs)
+
+	fmt.Print("Every URL has been verified !\n")
 
 }

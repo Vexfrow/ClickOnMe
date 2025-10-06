@@ -18,7 +18,7 @@ var rootCmd = &cobra.Command{
 	
 	ClickOnMe is a tool that verify if a WebPage (or a set of WebPages) is vulnerable to the ClickJacking vulnerability
 	It can either be used by providing a unique URL with the "--url" option
-	or a list of URLs by writing them in a file (one per line) and using the "--file" option `,
+	or a list of URLs by writing them in a file (one per line) and using the "--inputFile" option `,
 }
 
 func Execute() {
@@ -31,7 +31,8 @@ func Execute() {
 
 func init() {
 	rootCmd.Flags().BoolP("help", "h", false, "Help message for toggle")
-	rootCmd.Flags().StringVarP(&checker.FileURLs, "file", "f", "", "File containing URLs")
+	rootCmd.Flags().StringVarP(&checker.FileURLs, "inputFile", "i", "", "Input File containing URLs")
+	rootCmd.Flags().StringVarP(&checker.OutputFile, "outputFile", "o", "", "Output File containing results")
 	rootCmd.Flags().StringVarP(&checker.URL, "url", "u", "", "URL that must be checked")
 	rootCmd.Flags().IntVarP(&checker.RateLimit, "rate", "r", 25, "Rate limit for the number of request that must be send every second")
 }
