@@ -6,12 +6,16 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 var (
-	FileURLs  string
-	RateLimit int
-	URL       string
+	FileURLs    string
+	RateLimit   int
+	URL         string
+	OutputFile  string
+	ToggleColor bool
 )
 
 type Result int
@@ -32,14 +36,15 @@ const (
 	ERROR
 )
 
-func (res Result) String() string {
+func (res Result) toString() string {
 	return resName[res]
+
 }
 
 func fillListFromFile() []string {
 	file, err := os.Open(FileURLs)
 	if err != nil {
-		fmt.Printf("[ERROR] An error occurred while trying to open the file : %s\nPlease check the name of the file\n\n", FileURLs)
+		fmt.Printf("[ERROR] An error occurred while trying to open the file : %s\nPlease check the name of the file\n", FileURLs)
 		os.Exit(1)
 	}
 	var listURLs []string
@@ -55,7 +60,7 @@ func testURL(url string) Result {
 	resp, err := http.Get(url)
 
 	if err != nil {
-		fmt.Printf("Error while testing \"%s\" : %s\n", url, err)
+		fmt.Printf("[Error] Error while testing \"%s\" : %s\n", url, err)
 		return ERROR
 	}
 
@@ -73,9 +78,38 @@ func testURL(url string) Result {
 }
 
 func checkListURL(checkListURL []string) {
+
+	//Determine either the result should be printed on stdout or written in a file
+	writeFD := os.Stdout
+
+	if OutputFile != "" {
+		file, err := os.OpenFile(OutputFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0777)
+		if err == nil {
+			writeFD = file
+		} else {
+			fmt.Printf("[ERROR] The file \"%s\" cannot be opened : %s\n", OutputFile, err)
+		}
+	}
+
+	fmt.Print("\nStart checking URL\n\n")
+
 	for _, url := range checkListURL {
 		answer := testURL(url)
-		fmt.Printf("%s\t|\t%s\t\n", url, answer.String())
+		res := "|  " + url + "\t|\t" + answer.toString() + "\t|\n"
+		if ToggleColor && writeFD == os.Stdout {
+			switch answer {
+			case OK:
+				color.Red(res)
+			case NOK:
+				color.Green(res)
+			case MAYBE:
+				color.Yellow(res)
+			case ERROR:
+				color.Blue(res)
+			}
+		} else {
+			fmt.Fprintf(writeFD, "%s", res)
+		}
 	}
 
 }
@@ -84,7 +118,7 @@ func StartChecking() {
 	var listURLs []string
 
 	if (FileURLs != "" && URL != "") || (FileURLs == "" && URL == "") {
-		fmt.Printf("You should use \"--file\" or \"--url\" at least, but not both at the same time\n")
+		fmt.Printf("You should use \"--inputFile\" or \"--url\" at least, but not both at the same time\n")
 		os.Exit(1)
 	} else if FileURLs != "" {
 		listURLs = fillListFromFile()
@@ -93,5 +127,7 @@ func StartChecking() {
 	}
 
 	checkListURL(listURLs)
+
+	fmt.Print("\nEvery URL has been verified !\n")
 
 }
