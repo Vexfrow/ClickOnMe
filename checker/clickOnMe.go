@@ -59,7 +59,7 @@ func testURL(url string) Result {
 		return ERROR
 	}
 
-	// Check X-Frame-Option to see if it accept iframe from web pages of remote origin
+	// Check X-Frame-Option to see if it accepts iframe from web pages of remote origin
 	xFrameOption := resp.Header["X-Frame-Options"]
 	if xFrameOption != nil && (strings.Contains(xFrameOption[0], "deny") || strings.Contains(xFrameOption[0], "sameorigin")) {
 		return NOK
